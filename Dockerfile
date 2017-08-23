@@ -5,3 +5,5 @@ ADD . /app/
 ADD requirements.txt /app/
 RUN pip3 install -r requirements.txt
 CMD /usr/local/bin/python3 docker-entrypoint.py
+
+EXPOSE 5000 5001
