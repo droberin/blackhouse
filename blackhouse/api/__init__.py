@@ -2,10 +2,9 @@ from flask import Flask, jsonify, request, Response
 from functools import wraps
 # from blackhouse import arcade
 from pyHS100.pyHS100 import SmartPlug
-
 from blackhouse import flat_configuration
 
-
+import json
 import os.path
 import logging
 
@@ -13,15 +12,43 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(__name__)
 
-blackhouse_configuration_directory = '/etc/blackhouse'
+blackhouse_configuration_directory = '/app/etc'
+users_file = blackhouse_configuration_directory + '/users.json'
 
 
-# TODO: use a database instead of hardcoded useless security
 def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return username == 'admin' and password == 'SUPERSECRET'
+    if not os.path.isfile(users_file):
+        logging.info("No users.json config file found. You should create one if you wanna use this in production.")
+        if username == 'admin' and password:
+            logging.info("Generating user admin with requested password...")
+            generation_report = generate_basic_user_file(password)
+    try:
+        with open(users_file) as data_file:
+            data = json.load(data_file)
+            if username in data:
+                return password == data[username]
+            else:
+                return False
+    except FileNotFoundError:
+        logging.info("No users file seem to be available")
+
+
+def generate_basic_user_file(password, force=False):
+    my_response = False
+    default_file_content = '{"admin": "' + password + '"}'
+    if os.path.isfile(users_file):
+        if not force:
+            my_response = False
+    else:
+        with open(users_file, "w") as my_users_file:
+            my_users_file.write(default_file_content)
+            my_users_file.close()
+            if my_users_file:
+                my_response = True
+    return my_response
 
 
 # TODO: elaborate from this...
