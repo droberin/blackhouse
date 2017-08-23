@@ -4,6 +4,8 @@ import logging
 # import blackhouse.assistant
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
+if not os.path.isdir(black_house.blackhouse_configuration_directory):
+    os.mkdir(black_house.blackhouse_configuration_directory)
 certificate_file = black_house.blackhouse_configuration_directory + '/ssl/cert.pem'
 certificate_key = black_house.blackhouse_configuration_directory + '/ssl/cert.key'
 if os.path.isfile(certificate_file) and os.path.isfile(certificate_key):
