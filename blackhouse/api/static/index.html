@@ -42,7 +42,9 @@
           .then(function(response) {
               $scope.ventilador = response.data;
           });
-
+      }
+      $scope.switch_push = function(smartServer, smartSwitch) {
+        $http.put('/remote_push/' + smartServer + '/' + smartSwitch, turn_on)
       }
     });
 
@@ -77,6 +79,19 @@
             </form>
         </div>
     </div>
+
+    <div class="card horizontal">
+        <div class="card-image waves-effect waves-block waves-light">
+            <img src="images/gate.png">
+        </div>
+        <div class="card-content">
+            <div>Gate</div>
+            <form ng-submit="switch_push('gate', '18')">
+                <button class="btn waves-effect waves-light" type="submit" name="action">Toggle</button>
+            </form>
+        </div>
+    </div>
+
 
 </body>
 </html>

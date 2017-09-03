@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, Response
+import requests
 from functools import wraps
 # from blackhouse import arcade
 from pyHS100.pyHS100 import SmartPlug
@@ -81,6 +82,7 @@ def requires_auth(f):
 def provide_valid_file_or_fail(file):
     valid_static_files = [
         'angular.min.js',
+        'angular.min.js.map',
         'protractor.js',
         'materialize.js',
         'materialize.min.js',
@@ -98,6 +100,7 @@ def provide_valid_file_or_fail(file):
         'Roboto-Light.woff',
         'depuradora.jpg',
         'ventilador.jpg',
+        'gate.png',
     ]
     extension_folder_dict = {
         '.html': 'html',
@@ -193,6 +196,21 @@ def get_switch(my_switch):
         }
         return jsonify(switch_status)
 
+
+@app.route('/remote_push/<string:server>/<int:my_switch>', methods=['PUT'])
+@requires_auth
+def push_button(server, my_switch):
+    my_servers = flat_configuration.get_remote_servers()
+    if server in my_servers:
+        switches = flat_configuration.get_gpio_switches()
+        if my_switch in switches:
+            request_url = my_servers[server]['proto'] + '://' \
+                + my_servers[server]['username'] + ':' + my_servers[server]['password'] + '@'\
+                + my_servers[server]['hostname'] + ':' + str(my_servers[server]['port']) + '/push/' + str(my_switch)
+            requests.put(request_url, data='{"status": "on"}')
+            return jsonify(message="Request sent...")
+        return jsonify(message="Invalid push button ID")
+    return jsonify(message="Server or push button incorrect")
 
 if __name__ == "__main__":
     certificate_file = blackhouse_configuration_directory + '/ssl/cert.pem'
