@@ -1,0 +1,10 @@
+{
+  "serafin": {
+    "mac": "74:d4:35:8a:7f:1e",
+    "desc": "Desktop Computer"
+  },
+  "mediaserver": {
+    "mac": "74:d4:35:8a:7a:c1",
+    "desc": "Media server"
+  }
+}

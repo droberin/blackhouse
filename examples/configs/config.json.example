@@ -1,0 +1,12 @@
+{
+  "VALID_CHAT_ID": {
+    "phone": "+34XXXXXXXXX",
+    "name": "RealName of User",
+    "totp_key": "A_VALID_KEY_TO_GENERATE_TOKEN"
+  },
+  "22222": {
+    "phone": "+346XXXXXXXX",
+    "name": "DRoBeR",
+    "totp_key": "A_VALID_KEY_TO_GENERATE_TOKEN"
+  }
+}
