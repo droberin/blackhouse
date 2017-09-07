@@ -1,13 +1,25 @@
 import os.path
 import blackhouse.api as black_house
 import logging
+import threading
+
 # import blackhouse.assistant
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+
+def telegram_bot_thread():
+   import blackhouse.bot
+
 
 if not os.path.isdir(black_house.blackhouse_configuration_directory):
     os.mkdir(black_house.blackhouse_configuration_directory)
 certificate_file = black_house.blackhouse_configuration_directory + '/ssl/cert.pem'
 certificate_key = black_house.blackhouse_configuration_directory + '/ssl/cert.key'
+
+t = threading.Thread(name="bot", target=telegram_bot_thread, args=())
+t.start()
+
+
 if os.path.isfile(certificate_file) and os.path.isfile(certificate_key):
     logging.info("Certificates found. Trying to run in SSL mode")
     # order matters

@@ -1,2 +1,5 @@
 flask
 pyHS100
+pyotp
+python-telegram-bot
+requests
