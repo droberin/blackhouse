@@ -1,7 +1,7 @@
 FROM python:3-slim
 RUN mkdir -p /app/etc
 WORKDIR /app
-ADD blackhouse /app/
+COPY blackhouse /app/
 ADD requirements.txt /app/
 RUN pip3 install -r requirements.txt
 COPY docker-entrypoint.py /app
