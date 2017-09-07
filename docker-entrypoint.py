@@ -8,7 +8,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 
 def telegram_bot_thread():
-   import blackhouse.bot
+    """
+    This is an old code... must rewrite it soon and add run method instead of automatic when loaded...
+    :return:
+    """
+    import blackhouse.bot
 
 
 if not os.path.isdir(black_house.blackhouse_configuration_directory):
