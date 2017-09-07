@@ -24,7 +24,7 @@ my_token = os.getenv('TELEGRAM_TOKEN', None)
 
 # Check if running inside a Docker container
 if os.path.isfile("/.dockerenv"):
-    config_dir = os.getenv('TELEGRAM_CONFIG_DIR', "/app/config")
+    config_dir = os.getenv('TELEGRAM_CONFIG_DIR', "/app/etc")
     running_in_docker = True
 else:
     config_dir = os.getenv('TELEGRAM_CONFIG_DIR', ".")
