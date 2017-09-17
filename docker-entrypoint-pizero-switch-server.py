@@ -1,11 +1,11 @@
 import os.path
 import blackhouse.switch as black_house
-from blackhouse import flat_configuration
+from blackhouse.flat_configuration import BlackhouseConfiguration
 import logging
 # import blackhouse.assistant
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-cfg = flat_configuration.get_blackhouse_config()
+cfg = BlackhouseConfiguration()
 
 if not os.path.isdir(cfg['blackhouse_configuration_directory']):
     os.mkdir(cfg['blackhouse_configuration_directory'])

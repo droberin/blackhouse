@@ -3,3 +3,4 @@ pyHS100
 pyotp
 python-telegram-bot
 requests
+configobj
