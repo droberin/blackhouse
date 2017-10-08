@@ -208,13 +208,13 @@ def get_switch(switch_type, my_switch):
     service = configuration.get_device_info(my_switch)
     if service:
         if switch_type == "hs100":
-            temp_switch = SmartPlug(service)
+            temp_switch = SmartPlug(service['hostname'])
             switch_status = {
                 'status': temp_switch.state,
                 'alias': temp_switch.alias,
             }
             return jsonify(switch_status)
-        elif switch_type == "gpio_switch":
+        elif switch_type == "gpio_push":
             temp_switch = GPIOSwitch(service)
             switch_status = {
                 'status': temp_switch.state(),
