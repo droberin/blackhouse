@@ -44,7 +44,7 @@
           });
       }
       $scope.switch_push = function(smartType, smartServer, smartSwitch) {
-        $http.put('/remote_push/' + smartType + '/' + smartServer + '/' + smartSwitch, turn_on)
+        $http.put('/push/' + smartType + '/' + smartServer + '/' + smartSwitch, turn_on)
       }
     });
 
