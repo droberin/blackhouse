@@ -19,6 +19,7 @@ users_file = cfg.config_structure['blackhouse_configuration_directory'] + '/' + 
 blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
 print("Local device is running as: {}".format(blackhouse_service_type))
 if blackhouse_service_type == 'push':
+    print("Device is PUSH. Trying to load GPIO.")
     from RPi.GPIO import GPIO
 
 
