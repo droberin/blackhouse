@@ -1,5 +1,5 @@
 [gate]
-type=gpio
+type=gpio_push
 proto=http
 hostname=pi2.local
 port=5002
