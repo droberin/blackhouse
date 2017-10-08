@@ -4,11 +4,11 @@ from functools import wraps
 # from blackhouse import arcade
 from pyHS100.pyHS100 import SmartPlug
 from blackhouse.flat_configuration import BlackhouseConfiguration
-from blackhouse.switch.gpioswitch import GPIOSwitch
 
 import json
 import os.path
 import logging
+from os import getenv
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 app = Flask(__name__, static_url_path='/static')
@@ -18,6 +18,10 @@ blackhouse_configuration_directory = '/app/etc'
 users_file = blackhouse_configuration_directory + '/users.json'
 
 blackhouse_switches_config = blackhouse_configuration_directory + '/switches.ini'
+
+blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
+if blackhouse_service_type == 'push':
+    from blackhouse.switch.gpioswitch import GPIOSwitch
 
 
 def check_auth(username, password):
