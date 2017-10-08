@@ -63,7 +63,7 @@ if my_token is None:
         token_file_full_path = config_dir + "/" + token_file
     if os.path.isfile(token_file_full_path):
         logging.debug("Token file found, trying to load it.")
-        with open (token_file, "r") as my_config:
+        with open (token_file_full_path, "r") as my_config:
             my_token = my_config.read(50).rstrip(os.linesep)
     else:
         logging.error("No token file found in {}".format(token_file_full_path))
