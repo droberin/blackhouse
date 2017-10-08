@@ -1,4 +1,4 @@
-import os.path
+import os
 import blackhouse.switch as black_house
 from blackhouse.flat_configuration import BlackhouseConfiguration
 import logging
@@ -6,6 +6,9 @@ import logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 cfg = BlackhouseConfiguration()
+
+# If no value is set for BH_SERVICE_TYPE set it to PUSH
+os.environ['BH_SERVICE_TYPE'] = os.getenv('BH_SERVICE_TYPE', 'push')
 
 if not os.path.isdir(cfg['blackhouse_configuration_directory']):
     os.mkdir(cfg['blackhouse_configuration_directory'])

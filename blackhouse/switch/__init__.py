@@ -1,4 +1,3 @@
-import RPi.GPIO as GPIO
 from flask import Flask, jsonify, request, Response
 from functools import wraps
 from blackhouse.flat_configuration import BlackhouseConfiguration, GPIODeviceConfiguration
@@ -7,6 +6,7 @@ from time import sleep
 import json
 import os.path
 import logging
+from os import getenv
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 app = Flask(__name__, static_url_path='/static')
@@ -16,6 +16,10 @@ cfg = BlackhouseConfiguration()
 
 my_gpio_device = GPIODeviceConfiguration()
 users_file = cfg['blackhouse_configuration_directory'] + '/' + cfg['users_file']
+
+blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
+if blackhouse_service_type == 'push':
+    from blackhouse.switch.gpioswitch import GPIOSwitch
 
 
 def check_auth(username, password):
