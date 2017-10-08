@@ -228,7 +228,8 @@ def echo(bot, update):
             service = configuration.get_device_info('gate', 'gpio_push')
             if service:
                 temp_switch = GPIOSwitch(service)
-                temp_switch.push(18)
+                logging.info("[{}] Requested Gate push".format(user_name))
+                bot.sendMessage(chat_id=chat_id, text=temp_switch.push(18))
             else:
                 bot.sendMessage(chat_id=chat_id, text="No 'gpio_push' device named 'gate' found. (PIN 18)")
         else:
