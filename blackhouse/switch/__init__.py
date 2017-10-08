@@ -15,7 +15,7 @@ app.config.from_object(__name__)
 cfg = BlackhouseConfiguration()
 
 my_gpio_device = GPIODeviceConfiguration()
-users_file = cfg['blackhouse_configuration_directory'] + '/' + cfg['users_file']
+users_file = cfg.config_structure['blackhouse_configuration_directory'] + '/' + cfg.config_structure['users_file']
 
 blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
 if blackhouse_service_type == 'push':
@@ -98,8 +98,7 @@ def index():
 @app.route('/push/<int:my_switch>', methods=['PUT'])
 @requires_auth
 def set_push_button(my_switch):
-    switches = cfg.get_devices("gpio_switches")
-    if my_switch in switches:
+    if GPIODeviceConfiguration.valid_pin(my_switch):
         try:
             temp_switch = set_gpio_status(my_switch)
             return temp_switch
