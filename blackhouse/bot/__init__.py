@@ -14,7 +14,6 @@ import getopt
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 from blackhouse.flat_configuration import BlackhouseConfiguration
-from pyHS100.pyHS100 import SmartPlug
 from blackhouse.switch.gpioswitch import GPIOSwitch
 
 debug = True
