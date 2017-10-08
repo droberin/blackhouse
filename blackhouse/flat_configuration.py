@@ -7,7 +7,7 @@ class BlackhouseConfiguration:
     config_structure = dict()
     devices = {
         "hs100": dict(),
-        "gpio_switches": dict(),
+        "gpio_switch": dict(),
         "gpio_push": dict(),
     }
     config_file = None

@@ -207,7 +207,7 @@ def push_switch(switch_type, my_switch, my_pin):
         return jsonify(False)
     service = configuration.get_device_info(my_switch)
     if service:
-        if switch_type == "gpio_switch":
+        if switch_type == "gpio_push":
             temp_switch = GPIOSwitch(service)
             return jsonify(temp_switch.push(my_pin))
         else:
