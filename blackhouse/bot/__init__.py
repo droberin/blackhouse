@@ -225,7 +225,7 @@ def echo(bot, update):
             if not configuration.get_devices('gpio_push'):
                 bot.sendMessage(chat_id=chat_id, text="Coudn't find any GPIO_push device")
                 return False
-            service = configuration.get_device_info('gate')
+            service = configuration.get_device_info('gate', 'gpio_push')
             if service:
                 temp_switch = GPIOSwitch(service)
                 temp_switch.push(18)
