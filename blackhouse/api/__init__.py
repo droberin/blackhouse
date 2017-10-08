@@ -163,8 +163,10 @@ def index():
 @app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['PUT'])
 @requires_auth
 def set_switch(switch_type, my_switch):
-    switches = BlackhouseConfiguration.devices.get(switch_type)
-    service = switches.get(my_switch)
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return jsonify(False)
+    service = configuration.get_device_info(my_switch)
     if service:
         if switch_type == "hs100":
             temp_switch = SmartPlug(service)
@@ -196,8 +198,10 @@ def set_switch(switch_type, my_switch):
 @app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['GET'])
 @requires_auth
 def get_switch(switch_type, my_switch):
-    switches = BlackhouseConfiguration.devices.get(switch_type)
-    service = switches.get(my_switch)
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return jsonify(False)
+    service = configuration.get_device_info(my_switch)
     if service:
         if switch_type == "hs100":
             temp_switch = SmartPlug(service)
