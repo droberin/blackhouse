@@ -201,7 +201,7 @@ def set_switch(switch_type, my_switch):
 
 @app.route('/push/<string:switch_type>/<string:my_switch>/<string:my_pin>', methods=['PUT'])
 @requires_auth
-def set_switch(switch_type, my_switch, my_pin):
+def push_switch(switch_type, my_switch, my_pin):
     configuration = BlackhouseConfiguration()
     if not configuration.get_devices(switch_type):
         return jsonify(False)
