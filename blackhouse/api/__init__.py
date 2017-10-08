@@ -173,7 +173,7 @@ def set_switch(switch_type, my_switch):
     service = configuration.get_device_info(my_switch)
     if service:
         if switch_type == "hs100":
-            temp_switch = SmartPlug(service)
+            temp_switch = SmartPlug(service['hostname'])
         elif switch_type == "gpio_switch":
             temp_switch = GPIOSwitch(service)
         else:
