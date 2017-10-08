@@ -199,6 +199,22 @@ def set_switch(switch_type, my_switch):
     return jsonify(service)
 
 
+@app.route('/push/<string:switch_type>/<string:my_switch>/<string:my_pin>', methods=['PUT'])
+@requires_auth
+def set_switch(switch_type, my_switch, my_pin):
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return jsonify(False)
+    service = configuration.get_device_info(my_switch)
+    if service:
+        if switch_type == "gpio_switch":
+            temp_switch = GPIOSwitch(service)
+            return jsonify(temp_switch.push(my_pin))
+        else:
+            return jsonify("Missing valid device")
+    return jsonify(service)
+
+
 @app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['GET'])
 @requires_auth
 def get_switch(switch_type, my_switch):
