@@ -13,6 +13,10 @@ from blackhouse.tools import wake_on_lan
 import getopt
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
+from blackhouse.flat_configuration import BlackhouseConfiguration
+from pyHS100.pyHS100 import SmartPlug
+from blackhouse.switch.gpioswitch import GPIOSwitch
+
 debug = True
 
 token_file = ".token_secret"
@@ -183,11 +187,10 @@ def echo(bot, update):
                             user_name))
         return False
     if len(incoming_photos) > 0:
-        logging.info("Some photos are comming!!! {}".format(len(incoming_photos)))
+        logging.info("Some photos are coming!!! {}".format(len(incoming_photos)))
 
     if message.lower().startswith("configure"):
         if chat_id in valid_uids:
-            params = ()
             params = message.split(' '),
             params = params[0]
             if len(params) > 1:
@@ -216,9 +219,19 @@ def echo(bot, update):
         else:
             bot.sendMessage(chat_id=chat_id, text="Hola, persona desconocida que se hace llamar «{}»".format(user_name))
 
-    elif message.lower().startswith("abre"):
+    elif message.lower().startswith("gate") or\
+            message.lower().startswith("puerta"):
         if chat_id in valid_uids:
-            bot.sendMessage(chat_id=chat_id, text="Voy...")
+            configuration = BlackhouseConfiguration()
+            if not configuration.get_devices('gpio_push'):
+                bot.sendMessage(chat_id=chat_id, text="Coudn't find any GPIO_push device")
+                return False
+            service = configuration.get_device_info('gate')
+            if service:
+                temp_switch = GPIOSwitch(service)
+                temp_switch.push(18)
+            else:
+                bot.sendMessage(chat_id=chat_id, text="No 'gpio_push' device named 'gate' found. (PIN 18)")
         else:
             bot.sendMessage(chat_id=chat_id, text="Ya te molaba.\nHabla con el superintendente para que te dé acceso\n"
                                                   "Tu ID es: {}".format(chat_id))
@@ -239,7 +252,7 @@ def echo(bot, update):
             bot.sendMessage(chat_id=chat_id, text="Don't know you.")
 
     elif message.lower().startswith("reload"):
-        return_message = None
+        return_message = str()
         if os.path.isfile(config_file_full_path):
             valid_uids = json.load(open(config_file_full_path))
             return_message += "[Users]: Loaded {}\n".format(config_file_full_path)
