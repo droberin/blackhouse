@@ -43,7 +43,7 @@
               $scope.ventilador = response.data;
           });
       }
-      $scope.switch_push = function(smatType, smartServer, smartSwitch) {
+      $scope.switch_push = function(smartType, smartServer, smartSwitch) {
         $http.put('/remote_push/' + smartType + '/' + smartServer + '/' + smartSwitch, turn_on)
       }
     });
