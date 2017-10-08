@@ -172,8 +172,22 @@ def echo(bot, update):
     message_time = update.message.date
     current_time = datetime.datetime.fromtimestamp(time.time())
     diff_time = current_time - message_time
-    full_name = update.message.chat.first_name + " " + update.message.chat.last_name
-    user_name = update.message.chat.username
+    full_name = str()
+    try:
+        if update.message.chat.first_name:
+            full_name += update.message.chat.first_name
+        if update.message.chat.last_name:
+            if full_name == '':
+                full_name = update.message.chat.last_name
+            else:
+                full_name += update.message.chat.last_name
+    except TypeError:
+        pass
+    try:
+        user_name = update.message.chat.username
+    except KeyError:
+        user_name = 'UnknownUserName'
+
     logging.debug("DEBUG: echo(): chat_id: {} [@{}] [Photos: {}]".format(chat_id, user_name, len(incoming_photos)))
 
     if diff_time.seconds > 10:
