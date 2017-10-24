@@ -1,4 +1,4 @@
-FROM arm32v6/python:3-slim
+FROM arm32v6/python:3-alpile3.6
 RUN mkdir -p /app/etc && mkdir /app/blackhouse
 WORKDIR /app
 ADD requirements.txt /app/
