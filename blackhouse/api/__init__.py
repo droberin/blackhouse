@@ -3,11 +3,12 @@ import requests
 from functools import wraps
 # from blackhouse import arcade
 from pyHS100.pyHS100 import SmartPlug
-from blackhouse import flat_configuration
+from blackhouse.flat_configuration import BlackhouseConfiguration
 
 import json
 import os.path
 import logging
+from os import getenv
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 app = Flask(__name__, static_url_path='/static')
@@ -15,6 +16,12 @@ app.config.from_object(__name__)
 
 blackhouse_configuration_directory = '/app/etc'
 users_file = blackhouse_configuration_directory + '/users.json'
+
+blackhouse_switches_config = blackhouse_configuration_directory + '/switches.ini'
+
+blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
+if blackhouse_service_type == 'push':
+    from blackhouse.switch.gpioswitch import GPIOSwitch
 
 
 def check_auth(username, password):
@@ -157,13 +164,20 @@ def index():
     return app.send_static_file('index.html')
 
 
-@app.route('/switch/<string:my_switch>', methods=['PUT'])
+@app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['PUT'])
 @requires_auth
-def set_switch(my_switch):
-    switches = flat_configuration.get_switches()
-    service = switches.get(my_switch)
+def set_switch(switch_type, my_switch):
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return jsonify(False)
+    service = configuration.get_device_info(my_switch)
     if service:
-        temp_switch = SmartPlug(service)
+        if switch_type == "hs100":
+            temp_switch = SmartPlug(service['hostname'])
+        elif switch_type == "gpio_switch":
+            temp_switch = GPIOSwitch(service)
+        else:
+            return jsonify("Missing valid device")
         # switch_status = {
         #     'status': temp_switch.state,
         #     'alias': temp_switch.alias
@@ -176,6 +190,8 @@ def set_switch(my_switch):
             elif data['status'] == "off" or data['status'] == "false":
                 temp_switch.turn_off()
                 return jsonify(temp_switch.state)
+            elif data['status'] == "toggle":
+                temp_switch.turn_on()
             else:
                 return jsonify("Unknown state requested, br0")
         except (KeyError, TypeError):
@@ -183,34 +199,47 @@ def set_switch(my_switch):
     return jsonify(service)
 
 
-@app.route('/switch/<string:my_switch>', methods=['GET'])
+@app.route('/push/<string:switch_type>/<string:my_switch>/<string:my_pin>', methods=['PUT'])
 @requires_auth
-def get_switch(my_switch):
-    switches = flat_configuration.get_switches()
-    service = switches.get(my_switch)
+def push_switch(switch_type, my_switch, my_pin):
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return jsonify(False)
+    service = configuration.get_device_info(my_switch)
     if service:
-        temp_switch = SmartPlug(service)
-        switch_status = {
-            'status': temp_switch.state,
-            'alias': temp_switch.alias
-        }
-        return jsonify(switch_status)
+        if switch_type == "gpio_push":
+            temp_switch = GPIOSwitch(service)
+            return jsonify(temp_switch.push(my_pin))
+        else:
+            return jsonify("Missing valid device")
+    return jsonify(service)
 
 
-@app.route('/remote_push/<string:server>/<int:my_switch>', methods=['PUT'])
+@app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['GET'])
 @requires_auth
-def push_button(server, my_switch):
-    my_servers = flat_configuration.get_remote_servers()
-    if server in my_servers:
-        switches = flat_configuration.get_gpio_switches()
-        if my_switch in switches:
-            request_url = my_servers[server]['proto'] + '://' \
-                + my_servers[server]['username'] + ':' + my_servers[server]['password'] + '@'\
-                + my_servers[server]['hostname'] + ':' + str(my_servers[server]['port']) + '/push/' + str(my_switch)
-            requests.put(request_url, data='{"status": "on"}')
-            return jsonify(message="Request sent...")
-        return jsonify(message="Invalid push button ID")
-    return jsonify(message="Server or push button incorrect")
+def get_switch(switch_type, my_switch):
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return jsonify(False)
+    service = configuration.get_device_info(my_switch)
+    if service:
+        if switch_type == "hs100":
+            temp_switch = SmartPlug(service['hostname'])
+            switch_status = {
+                'status': temp_switch.state,
+                'alias': temp_switch.alias,
+            }
+            return jsonify(switch_status)
+        elif switch_type == "gpio_push":
+            temp_switch = GPIOSwitch(service)
+            switch_status = {
+                'status': temp_switch.state(),
+                'alias': temp_switch.name(),
+            }
+            return jsonify(switch_status)
+        else:
+            return jsonify(message="Switch not found or incorrect")
+
 
 if __name__ == "__main__":
     certificate_file = blackhouse_configuration_directory + '/ssl/cert.pem'

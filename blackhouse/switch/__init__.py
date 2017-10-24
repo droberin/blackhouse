@@ -1,20 +1,26 @@
-import RPi.GPIO as GPIO
 from flask import Flask, jsonify, request, Response
 from functools import wraps
-from blackhouse import flat_configuration
+from blackhouse.flat_configuration import BlackhouseConfiguration, GPIODeviceConfiguration
 from time import sleep
 
 import json
 import os.path
 import logging
+from os import getenv
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(__name__)
 
-cfg = flat_configuration.get_blackhouse_config()
+cfg = BlackhouseConfiguration()
 
-users_file = cfg['blackhouse_configuration_directory'] + '/' + cfg['users_file']
+users_file = cfg.config_structure['blackhouse_configuration_directory'] + '/' + cfg.config_structure['users_file']
+
+blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
+print("Local device is running as: {}".format(blackhouse_service_type))
+if blackhouse_service_type == 'push':
+    print("Device is PUSH. Trying to load GPIO.")
+    import RPi.GPIO as GPIO
 
 
 def check_auth(username, password):
@@ -93,8 +99,7 @@ def index():
 @app.route('/push/<int:my_switch>', methods=['PUT'])
 @requires_auth
 def set_push_button(my_switch):
-    switches = flat_configuration.get_gpio_switches()
-    if my_switch in switches:
+    if GPIODeviceConfiguration().valid_pin(my_switch):
         try:
             temp_switch = set_gpio_status(my_switch)
             return temp_switch
@@ -106,8 +111,7 @@ def set_push_button(my_switch):
 @app.route('/switch/<string:my_switch>', methods=['GET'])
 @requires_auth
 def get_switch(my_switch):
-    switches = flat_configuration.get_gpio_switches()
-    if my_switch in switches:
+    if GPIODeviceConfiguration().valid_pin(my_switch):
         temp_switch = get_gpio_status(my_switch)
         switch_status = {
             'status': temp_switch,
@@ -135,7 +139,7 @@ def set_gpio_status(gpio_pin, duration=2):
 
 
 if __name__ == "__main__":
-    cfg = flat_configuration.get_blackhouse_config()
+    cfg = BlackhouseConfiguration()
     certificate_file = cfg['blackhouse_configuration_directory'] + '/ssl/cert.pem'
     certificate_key = cfg['blackhouse_configuration_directory'] + '/ssl/cert.key'
     if os.path.isfile(certificate_file) and os.path.isfile(certificate_key):

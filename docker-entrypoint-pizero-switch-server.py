@@ -1,16 +1,19 @@
-import os.path
+import os
 import blackhouse.switch as black_house
-from blackhouse import flat_configuration
+from blackhouse.flat_configuration import BlackhouseConfiguration
 import logging
 # import blackhouse.assistant
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-cfg = flat_configuration.get_blackhouse_config()
+cfg = BlackhouseConfiguration()
 
-if not os.path.isdir(cfg['blackhouse_configuration_directory']):
-    os.mkdir(cfg['blackhouse_configuration_directory'])
-certificate_file = cfg['blackhouse_configuration_directory'] + '/ssl/cert.pem'
-certificate_key = cfg['blackhouse_configuration_directory'] + '/ssl/cert.key'
+# If no value is set for BH_SERVICE_TYPE set it to PUSH
+os.environ['BH_SERVICE_TYPE'] = os.getenv('BH_SERVICE_TYPE', 'push')
+
+if not os.path.isdir(cfg.config_structure['blackhouse_configuration_directory']):
+    os.mkdir(cfg.config_structure['blackhouse_configuration_directory'])
+certificate_file = cfg.config_structure['blackhouse_configuration_directory'] + '/ssl/cert.pem'
+certificate_key = cfg.config_structure['blackhouse_configuration_directory'] + '/ssl/cert.key'
 if os.path.isfile(certificate_file) and os.path.isfile(certificate_key):
     logging.info("Certificates found. Trying to run in SSL mode")
     # order matters

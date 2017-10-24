@@ -13,6 +13,9 @@ from blackhouse.tools import wake_on_lan
 import getopt
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
+from blackhouse.flat_configuration import BlackhouseConfiguration
+from blackhouse.switch.gpioswitch import GPIOSwitch
+
 debug = True
 
 token_file = ".token_secret"
@@ -63,7 +66,7 @@ if my_token is None:
         token_file_full_path = config_dir + "/" + token_file
     if os.path.isfile(token_file_full_path):
         logging.debug("Token file found, trying to load it.")
-        with open (token_file, "r") as my_config:
+        with open (token_file_full_path, "r") as my_config:
             my_token = my_config.read(50).rstrip(os.linesep)
     else:
         logging.error("No token file found in {}".format(token_file_full_path))
@@ -169,8 +172,22 @@ def echo(bot, update):
     message_time = update.message.date
     current_time = datetime.datetime.fromtimestamp(time.time())
     diff_time = current_time - message_time
-    full_name = update.message.chat.first_name + " " + update.message.chat.last_name
-    user_name = update.message.chat.username
+    full_name = str()
+    try:
+        if update.message.chat.first_name:
+            full_name += update.message.chat.first_name
+        if update.message.chat.last_name:
+            if full_name == '':
+                full_name = update.message.chat.last_name
+            else:
+                full_name += update.message.chat.last_name
+    except TypeError:
+        pass
+    try:
+        user_name = update.message.chat.username
+    except KeyError:
+        user_name = 'UnknownUserName'
+
     logging.debug("DEBUG: echo(): chat_id: {} [@{}] [Photos: {}]".format(chat_id, user_name, len(incoming_photos)))
 
     if diff_time.seconds > 10:
@@ -183,11 +200,10 @@ def echo(bot, update):
                             user_name))
         return False
     if len(incoming_photos) > 0:
-        logging.info("Some photos are comming!!! {}".format(len(incoming_photos)))
+        logging.info("Some photos are coming!!! {}".format(len(incoming_photos)))
 
     if message.lower().startswith("configure"):
         if chat_id in valid_uids:
-            params = ()
             params = message.split(' '),
             params = params[0]
             if len(params) > 1:
@@ -216,9 +232,20 @@ def echo(bot, update):
         else:
             bot.sendMessage(chat_id=chat_id, text="Hola, persona desconocida que se hace llamar «{}»".format(user_name))
 
-    elif message.lower().startswith("abre"):
+    elif message.lower().startswith("gate") or\
+            message.lower().startswith("puerta"):
         if chat_id in valid_uids:
-            bot.sendMessage(chat_id=chat_id, text="Voy...")
+            configuration = BlackhouseConfiguration()
+            if not configuration.get_devices('gpio_push'):
+                bot.sendMessage(chat_id=chat_id, text="Coudn't find any GPIO_push device")
+                return False
+            service = configuration.get_device_info('gate', 'gpio_push')
+            if service:
+                temp_switch = GPIOSwitch(service)
+                logging.info("[{}] Requested Gate push".format(user_name))
+                bot.sendMessage(chat_id=chat_id, text=temp_switch.push(18))
+            else:
+                bot.sendMessage(chat_id=chat_id, text="No 'gpio_push' device named 'gate' found. (PIN 18)")
         else:
             bot.sendMessage(chat_id=chat_id, text="Ya te molaba.\nHabla con el superintendente para que te dé acceso\n"
                                                   "Tu ID es: {}".format(chat_id))
@@ -239,7 +266,7 @@ def echo(bot, update):
             bot.sendMessage(chat_id=chat_id, text="Don't know you.")
 
     elif message.lower().startswith("reload"):
-        return_message = None
+        return_message = str()
         if os.path.isfile(config_file_full_path):
             valid_uids = json.load(open(config_file_full_path))
             return_message += "[Users]: Loaded {}\n".format(config_file_full_path)
