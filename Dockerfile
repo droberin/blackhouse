@@ -1,8 +1,9 @@
 FROM python:3-slim
 RUN mkdir -p /app/etc && mkdir /app/blackhouse
 WORKDIR /app
+ENV PYTHONUSERBASE /app/vendor
 ADD requirements.txt /app/
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --user --upgrade
 COPY blackhouse /app/blackhouse
 COPY docker-entrypoint.py /app
 COPY docker-entrypoint-pizero-switch-server.py /app
