@@ -1,4 +1,4 @@
-version: '3'
+version: '3.1'
 services:
   control:
     image: drober/blackhouse:v1_pi3
@@ -6,4 +6,22 @@ services:
       - 5000:5000
       - 5001:5001
     volumes:
-      - /app/etc/:/app/etc/
+      - /app/etc:/app/etc
+    networks:
+      - blackhousenet
+    secrets:
+      - telegram_token
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [ node.role == manager ]
+    labels:
+      es.blackhouse.description: "Blackhouse Domotica"
+      es.blackhouse.awesome: ""
+networks:
+  blackhousenet:
+    driver: overlay
+secrets:
+  telegram_token:
+    external: true
