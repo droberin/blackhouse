@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<script src="js/angular.min.js"></script>
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet" href="css/materialize.css">
+<!--Import Google Icon Font-->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<body class="blue-text" style="width: 960px; margin: 0 auto; max-width:100%;" ng-app="myApp" ng-controller="myCtrl">
+    <script src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script>
+    var turn_on = { "status": "on" }
+    var turn_off = { "status": "off" }
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function($scope, $http) {
+      {% for device in devices %}
+      $http.get("/switch/hs100/{{ device }}")
+      .then(function(response) {
+          $scope.{{ device }} = response.data;
+      });
+      {% endfor %}
+      $scope.switch_set = function(smartType, smartSwitch, smartAction) {
+        if (smartAction == "on") {
+            smartAction = turn_on;
+        } else {
+            smartAction = turn_off;
+        }
+        // console.log(smartAction);
+        $http.put('/switch/' + smartType + '/' + smartSwitch, smartAction,
+        function (response) { $scope.results = response; },
+        function (failure) { console.log("failed :(", failure); });
+
+          {% for device in devices %}
+          $http.get("/switch/hs100/{{ device }}")
+          .then(function(response) {
+              $scope.{{ device }} = response.data;
+          });
+          {% endfor %}
+      }
+      $scope.switch_push = function(smartType, smartServer, smartSwitch) {
+        $http.put('/push/' + smartType + '/' + smartServer + '/' + smartSwitch, turn_on)
+      }
+    });
+
+    </script>
+
+    {% for device in devices %}
+    <div class="card horizontal">
+        <div class="card-image waves-effect waves-block waves-light">
+            {% if device.image %}
+            <img src="images/{{ device.image }}">
+            {% else %}
+            <img src="images/generic.jpg">
+            {% endif %}
+        </div>
+        <div class="card-content">
+            <div>{{ device }}: <span style="font-weight: bold;">{{ '{{' }}{{ device }}.status{{ '}}' }}</span></div>
+            <div>Real Device Alias: {{ '{{' }}{{ device }}.alias{{ '}}' }}</div>
+            <form ng-submit="switch_set('hs100', '{{ device }}', 'on')">
+                <button class="btn waves-effect waves-light" type="submit" name="action">Activar</button>
+            </form>
+            <form ng-submit="switch_set('hs100', '{{ device }}', 'off')">
+                <button class="btn waves-effect waves-light teal" type="submit" name="action">Desactivar</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="card horizontal">
+        <div class="card-image waves-effect waves-block waves-light">
+            <img src="images/gate.png">
+        </div>
+        <div class="card-content">
+            <div>Gate</div>
+            <form ng-submit="switch_push('gpio_push', 'gate', '18')">
+                <button class="btn waves-effect waves-light" type="submit" name="action">Toggle</button>
+            </form>
+        </div>
+    </div>
+
+
+</body>
+</html>
