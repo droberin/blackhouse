@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, request, Response, render_template
 import requests
 from functools import wraps
 # from blackhouse import arcade
@@ -107,6 +107,7 @@ def provide_valid_file_or_fail(file):
         'Roboto-Light.woff',
         'depuradora.jpg',
         'ventilador.jpg',
+        'generic.jpg',
         'gate.png',
     ]
     extension_folder_dict = {
@@ -157,11 +158,27 @@ def welcome_message():
     return jsonify(my_welcome)
 
 
+@app.route('/templates/<string:template_name>', methods=['GET'])
+@requires_auth
+def template(template_name):
+    valid_templates = {
+        'index': 'index.html'
+    }
+    configuration = BlackhouseConfiguration()
+    devices = configuration.get_devices('hs100')
+    logging.info(devices)
+    if valid_templates.get(template_name):
+        return render_template(template_name + '.html', devices=devices)
+    else:
+        return jsonify("Sorry, can't find that template")
+
+
 @app.route('/')
 @app.route('/index')
 @requires_auth
 def index():
-    return app.send_static_file('index.html')
+    return template('index')
+    # return app.send_static_file('index.html')
 
 
 @app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['PUT'])
