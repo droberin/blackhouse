@@ -1,6 +1,7 @@
 import logging
 import os
 import configobj
+import yaml
 
 
 class BlackhouseConfiguration:
@@ -17,13 +18,23 @@ class BlackhouseConfiguration:
         self.reload()
 
     def reload(self):
-
+        raw_devices = None
         devices_file = \
             self.config_structure['blackhouse_configuration_directory']\
             + '/'\
             + self.config_structure['blackhouse_configuration_devices']
         if devices_file and os.path.isfile(devices_file):
-            raw_devices = configobj.ConfigObj(devices_file)
+            if str(devices_file).endswith('.ini'):
+                raw_devices = configobj.ConfigObj(devices_file)
+            elif str(devices_file).endswith('.yml') or str(devices_file).endswith('.yaml'):
+                with open(devices_file, 'r') as stream:
+                    raw_devices = yaml.load(stream)
+            else:
+                logging.warning(
+                    "Devices configuration file doesn't match any accepted file format: '{}'".
+                    format(devices_file)
+                )
+                return False
             return_default = True
             if len(raw_devices) > 0:
                 for device in raw_devices:
@@ -61,7 +72,7 @@ class BlackhouseConfiguration:
     def define_blackhouse_config(self):
         self.config_structure['blackhouse_configuration_directory'] = os.environ.get('BH_CONF_DIR', '/app/etc')
         self.config_structure['users_file'] = os.environ.get('BH_USERS_FILE', 'users.json')
-        self.config_structure['blackhouse_configuration_devices'] = os.environ.get('BH_DEVICES', 'devices.ini')
+        self.config_structure['blackhouse_configuration_devices'] = os.environ.get('BH_DEVICES', 'devices.yaml')
         return self.config_structure
 
 

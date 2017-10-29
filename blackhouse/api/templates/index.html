@@ -91,11 +91,17 @@
                 </div>
                 <div class="card-content col s6">
                     <span class="card-title">{{ device }}</span>
-                    <div class="card-action">
+                    <ul id="dropdown_{{device}}" class="dropdown-content">
                     {% for pin in devices.gpio_push[device]['pins'] %}
-                        <a href="#" ng-click="switch_push('gpio_push', '{{ device }}', '{{ pin }}')">{{ pin }}</a>
+                        {% if pin.badge %}
+                        <li><a href="#" ng-click="switch_push('gpio_push', '{{ device }}', '{{ pin.pin }}')">{{ pin.name }}<span class="badge {{pin.badge}}"></span></a></li>
+                        {% else %}
+                        <li><a href="#" ng-click="switch_push('gpio_push', '{{ device }}', '{{ pin.pin }}')">{{ pin.name }}</a></li>
+                        {% endif %}
                     {% endfor %}
-                    </div>
+                    </ul>
+                    <a class="btn dropdown-button" href="#!" data-activates="dropdown_{{device}}">Select<i class="material-icons right">arrow_drop_down</i></a>
+
 
                     <!--
                     <form ng-submit="switch_push('gpio_push', '{{ device }}', '{{ pin }}')">
