@@ -138,7 +138,7 @@ def provide_valid_file_or_fail(file):
 
 
 def dockerised():
-    return True if os.path.isfile('/.docker') else False
+    return True if os.path.isfile('/.dockerenv') else False
 
 # Alias for USA
 dockerized = dockerised
