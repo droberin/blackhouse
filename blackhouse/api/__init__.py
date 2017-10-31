@@ -247,13 +247,14 @@ def push_switch(switch_type, my_switch, my_pin):
     configuration = BlackhouseConfiguration()
     if not configuration.get_devices(switch_type):
         return jsonify(False)
-    service = configuration.get_device_info(my_switch)
+    service = configuration.get_device_info(my_switch, switch_type)
     if service:
         if switch_type == "gpio_push":
             temp_switch = GPIOSwitch(service)
             return jsonify(temp_switch.push(my_pin))
         else:
             return jsonify("Missing valid device")
+    logging.debug("Service not Found: {}".format(service))
     return jsonify(service)
 
 
