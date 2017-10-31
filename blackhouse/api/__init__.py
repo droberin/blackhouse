@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, Response, render_template
+from flask import Flask, jsonify, request, Response, render_template, abort
 import requests
 from functools import wraps
 # from blackhouse import arcade
@@ -14,10 +14,14 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(__name__)
 
-blackhouse_configuration_directory = '/app/etc'
-users_file = blackhouse_configuration_directory + '/users.json'
+blackhouse_config_instance = BlackhouseConfiguration()
 
-blackhouse_switches_config = blackhouse_configuration_directory + '/switches.ini'
+blackhouse_configuration_directory = blackhouse_config_instance.config_structure['blackhouse_configuration_directory']
+users_file = blackhouse_configuration_directory + '/' + blackhouse_config_instance.config_structure['users_file']
+
+blackhouse_switches_config =\
+    blackhouse_configuration_directory + '/'\
+    + blackhouse_config_instance.config_structure['blackhouse_configuration_devices']
 
 blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
 if blackhouse_service_type == 'push':
@@ -108,6 +112,7 @@ def provide_valid_file_or_fail(file):
         'depuradora.jpg',
         'ventilador.jpg',
         'generic.jpg',
+        'push.png',
         'gate.png',
     ]
     extension_folder_dict = {
@@ -122,12 +127,44 @@ def provide_valid_file_or_fail(file):
         '.woff': 'fonts',
         '.woff2': 'fonts',
     }
+    file = os.path.split(file)[1]
     if file not in valid_static_files:
-        return None
+        if not file.endswith('.jpg') and not file.endswith('.gif') and not file.endswith('.png'):
+            return None
     for extension in extension_folder_dict:
         if file.endswith(extension):
             return extension_folder_dict.get(extension) + '/' + file
     return None
+
+
+def dockerised():
+    return True if os.path.isfile('/.docker') else False
+
+# Alias for USA
+dockerized = dockerised
+
+
+def template(template_name):
+    """
+    Returns file from Jinja2 template
+    :param template_name: name of the template
+    :return:
+    """
+    valid_templates = {
+        'index': 'index.html'
+    }
+    if valid_templates.get(template_name):
+        configuration = BlackhouseConfiguration()
+        devices = configuration.devices
+        logging.debug('Devices used in template "{}":'.format(template_name, devices))
+        return render_template(
+            template_name + '.html',
+            devices=devices,
+            dockerised=dockerised()
+        )
+    else:
+        logging.debug('Template {} not found'.format(template_name))
+        return jsonify("Sorry, can't find that template")
 
 
 @app.route('/js/<path:path>')
@@ -142,9 +179,12 @@ def provide_valid_file_or_fail(file):
 def validate_static_content(path):
     file = provide_valid_file_or_fail(path)
     if file:
-        return app.send_static_file(file)
-    else:
-        return None
+        if os.path.isfile(app.static_folder + '/' + file):
+            return app.send_static_file(file)
+        # If content is not found, print a warning
+        logging.warning("Static content requested but not found: {}".format(file))
+    # Defaults to 404
+    abort(404)
 
 
 @app.route('/api/welcome')
@@ -156,21 +196,6 @@ def welcome_message():
         'object1': True if os.path.isfile('/.docker') else False
     }
     return jsonify(my_welcome)
-
-
-@app.route('/templates/<string:template_name>', methods=['GET'])
-@requires_auth
-def template(template_name):
-    valid_templates = {
-        'index': 'index.html'
-    }
-    configuration = BlackhouseConfiguration()
-    devices = configuration.get_devices('hs100')
-    logging.info(devices)
-    if valid_templates.get(template_name):
-        return render_template(template_name + '.html', devices=devices)
-    else:
-        return jsonify("Sorry, can't find that template")
 
 
 @app.route('/')

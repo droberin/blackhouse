@@ -1,0 +1,35 @@
+gate:
+  type: gpio_push
+  proto: http
+  hostname: pi2.local
+  port: 5002
+  username: gate_admin
+  password: Hell'sGates
+  image: gate.jpg
+  pins:
+  - name: Door
+    pin: 18
+  - name: Entrance Light
+    pin: 17
+  - name: Garage Light
+    pin: 16
+
+ventilador:
+  type: hs100
+  hostname: 192.168.1.13
+  image: ventilador.jpg
+
+depuradora:
+  type: hs100
+  hostname: 192.168.1.14
+  image: depuradora.jpg
+
+oficina:
+  type: hs100
+  hostname: 192.168.1.15
+  image: office.jpg
+
+arcade:
+  type: hs100
+  hostname: 192.168.1.18
+  image: arcade.jpg
