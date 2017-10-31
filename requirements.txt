@@ -4,3 +4,4 @@ pyotp
 python-telegram-bot
 requests
 configobj
+yaml
