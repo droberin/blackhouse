@@ -1,25 +1,24 @@
-from telegram.ext import MessageHandler, Filters
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
-
 import os
 import sys
 import time
 import logging
-from time import gmtime, strftime
 import datetime
 import pyotp
 import json
-from blackhouse.tools import wake_on_lan
 import getopt
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-from blackhouse.flat_configuration import BlackhouseConfiguration
-from blackhouse.switch.gpioswitch import GPIOSwitch
+from telegram.ext import MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 from blackhouse.api import request_push_to_device
+from blackhouse.flat_configuration import BlackhouseConfiguration
+from time import gmtime, strftime
+from blackhouse.tools import wake_on_lan
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 debug = True
 
-token_file = ".token_secret"
+token_file = ".telegram_token"
 
 token_file_full_path = None
 config_file_full_path = None
@@ -28,11 +27,12 @@ my_token = os.getenv('TELEGRAM_TOKEN', None)
 
 # Check if running inside a Docker container
 if os.path.isfile("/.dockerenv"):
-    config_dir = os.getenv('TELEGRAM_CONFIG_DIR', "/app/etc")
+    blackhouse_config = BlackhouseConfiguration()
+    config_dir = os.getenv('TELEGRAM_CONFIG_DIR', blackhouse_config.get_config_dir())
     running_in_docker = True
     # Take a look at token secrets, just in case of luck!
     if os.path.isfile('/run/secrets/telegram_token'):
-        logging.info("Found telegram token through Docker secrets")
+        logging.info("Found telegram token as docker secrets. Env var TELEGRAM_TOKEN would be ignored")
         with open('/run/secrets/telegram_token', 'r') as my_token_fp:
             my_token = my_token_fp.read(50).rstrip(os.linesep)
 else:
@@ -75,7 +75,8 @@ if my_token is None:
         with open (token_file_full_path, "r") as my_config:
             my_token = my_config.read(50).rstrip(os.linesep)
     else:
-        logging.error("No token file found in {}".format(token_file_full_path))
+        logging.warning("No token file found in {}.".format(token_file_full_path))
+        logging.info("Finishing Telegram bot process.")
         sys.exit(1)
 else:
     logging.info("Got token from environment")

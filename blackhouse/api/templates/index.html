@@ -6,11 +6,31 @@
 <!--Import Google Icon Font-->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-<body class="blue-text" style="width: 960px; margin: 0 auto; max-width:100%;" ng-app="myApp" ng-controller="myCtrl">
+<body class="red-text" style="min-width: 850px; max-height:960px; margin: 0 auto; max-width:960px;" ng-app="myApp" ng-controller="myCtrl">
     <script src="js/materialize.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="js/materialize.min.js"></script>
     <script>
+          $('.chips-initial').material_chip('data');
+          $('.modal').modal({
+            dismissible: true, // Modal can be dismissed by clicking outside of the modal
+            opacity: .5, // Opacity of modal background
+            inDuration: 300, // Transition in duration
+            outDuration: 200, // Transition out duration
+            startingTop: '4%', // Starting top style attribute
+            endingTop: '10%', // Ending top style attribute
+            ready: function(modal, trigger) { // Callback for Modal open. Modal and trigger parameters available.
+            alert("Ready");
+                console.log(modal, trigger);
+            },
+            complete: function() { alert('Closed'); } // Callback for Modal close
+          }
+      );
+      $(document).ready(function(){
+        // the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
+        $('.modal').modal();
+      });
+
     var turn_on = { "status": "on" }
     var turn_off = { "status": "off" }
     var app = angular.module('myApp', []);
@@ -46,21 +66,34 @@
 
     </script>
     <div class="row">
-        <div class="card-panel teal valign-wrapper">
-            <div class="valign-wrapper waves-effect waves-block waves-light">
-                {% if dockerised %}
-                <img src="images/docker-on.png" />
-                {% else %}
-                <img src="images/docker-off.png" />
-                {% endif %}
-                <span class="white-text">Blackhouse Control</span>
+        <div id="info1" class="modal modal-fixed-footer">
+            <div class="modal-content">
+                <h4><img src="images/logo.png" /></h4>
+                <p>Developed by Roberto Salgado. Find my at Github as @droberin.</p>
+                <p>Download and contribute to <a href="https://github.com/droberin/blackhouse" target="_blank">Blackhouse source</a> </p>
             </div>
+            <div class="modal-footer">
+                <a href="https://www.paypal.me/drober/10" target="_blank" class="modal-action yellow waves-effect waves-purple btn-flat">Donations</a>
+                <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+            </div>
+        </div>
+        <div class="center-align card">
+                <div class="col s1 center-align">
+                        <button class="btn purple lighten-4 black-text modal-trigger" data-target="info1">Info</button>
+                </div>
+                <div class="black-text col s8 center-align">
+                    <p><img data-target="info1" style="background:none;" class="z-depth-0 btn modal-trigger" src="images/logo.png" /></p>
+                </div>
+                <div class="col s3">
+                    <div class="row s12">{% if dockerised %}<img src="images/docker-on.png" />{% else %}<img src="images/docker-off.png" />{% endif %}</div>
+                    <div class="row s12 chip"><img src="images/generic.jpg" alt="Logged as"/>{{ logged_user }}</div>
+                </div>
         </div>
         <div class="divider"></div>
         <div class="col s6">
             <h4>HS100 Devices</h4>
             {% for device in devices.hs100 %}
-            <div class="card horizontal">
+            <div class="card horizontal hoverable">
                 <div class="card-image waves-effect waves-block waves-light col s6 valign-wrapper">
                     {% if devices.hs100[device]['image'] %}
                     <img src="images/{{ devices.hs100[device]['image'] }}" style="max-height:150px;">
@@ -81,7 +114,7 @@
         <div class="col s6">
             <h4>Push Buttons</h4>
             {% for device in devices.gpio_push %}
-            <div class="card horizontal">
+            <div class="card horizontal hoverable">
                 <div class="card-image waves-effect waves-block waves-light col s6">
                     {% if devices.gpio_push[device]['image'] %}
                     <img src="images/{{ devices.gpio_push[device]['image'] }}" style="max-height:150px;">
@@ -91,7 +124,7 @@
                 </div>
                 <div class="card-content col s6">
                     <span class="card-title">{{ device }}</span>
-                    <ul id="dropdown_{{device}}" class="dropdown-content">
+                    <ul id="dropdown_{{device}}" class="dropdown-content z-depth-5">
                     {% for pin in devices.gpio_push[device]['pins'] %}
                         {% if pin.badge %}
                         <li><a href="#" ng-click="switch_push('gpio_push', '{{ device }}', '{{ pin.pin }}')">{{ pin.name }}<span class="badge {{pin.badge}}"></span></a></li>

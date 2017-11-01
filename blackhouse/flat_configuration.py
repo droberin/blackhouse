@@ -75,6 +75,35 @@ class BlackhouseConfiguration:
         self.config_structure['blackhouse_configuration_devices'] = os.environ.get('BH_DEVICES', 'devices.yaml')
         return self.config_structure
 
+    def get_config_dir(self):
+        """
+        Provides blackhouse configuration directory path
+        :return: path
+        """
+        return self.config_structure['blackhouse_configuration_directory']
+
+    def get_users_file(self):
+        """
+        Provides absolute path to users file
+        :return: str file path
+        """
+        return self.config_structure['blackhouse_configuration_directory'] + '/' + self.config_structure['users_file']
+
+    def get_devices_file(self, content=False):
+        """
+        Provides file path or its content
+        :param content: True for content, false for path
+        :return: path or file data
+        """
+        devices_file = self.config_structure['blackhouse_configuration_directory'] + '/' +\
+            self.config_structure['blackhouse_configuration_devices']
+
+        if content:
+            with open(devices_file, 'r') as devices_fp:
+                return devices_fp.read()
+        else:
+            return devices_file
+
 
 class GPIODeviceConfiguration:
     valid_gpio_pin = [4, 5, 6, 12, 13] + list(range(16, 26))

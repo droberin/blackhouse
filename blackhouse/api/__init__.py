@@ -26,11 +26,14 @@ blackhouse_switches_config =\
 blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
 from blackhouse.switch.gpioswitch import GPIOSwitch
 
+current_user = None
+
 
 def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
+    global current_user
     if not os.path.isfile(users_file):
         logging.info("No users.json config file found. You should create one if you wanna use this in production.")
         if username == 'admin' and password:
@@ -40,6 +43,7 @@ def check_auth(username, password):
         with open(users_file) as data_file:
             data = json.load(data_file)
             if username in data:
+                current_user = username
                 return password == data[username]
             else:
                 return False
@@ -155,11 +159,12 @@ def template(template_name):
     if valid_templates.get(template_name):
         configuration = BlackhouseConfiguration()
         devices = configuration.devices
-        logging.debug('Devices used in template "{}":'.format(template_name, devices))
+        logging.debug('Devices used in template "{}":'.format(template_name))
         return render_template(
             template_name + '.html',
             devices=devices,
-            dockerised=dockerised()
+            dockerised=dockerised(),
+            logged_user=current_user,
         )
     else:
         logging.debug('Template {} not found'.format(template_name))
