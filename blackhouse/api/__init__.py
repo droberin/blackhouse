@@ -167,6 +167,28 @@ def template(template_name):
         return jsonify("Sorry, can't find that template")
 
 
+def request_push_to_device(my_switch, switch_type, my_pin):
+    """
+    Push only, can be used from CLI.
+    :param my_switch: switch name defined in devices configuration
+    :param switch_type: gpio_push
+    :param my_pin: pin int.
+    :return: result of execution or False
+    """
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return False
+    service = configuration.get_device_info(my_switch, switch_type)
+    if service:
+        if switch_type == "gpio_push":
+            temp_switch = GPIOSwitch(service)
+            return temp_switch.push(my_pin)
+        else:
+            return "Missing valid device"
+    logging.debug("Service not Found: {}".format(service))
+    return service
+
+
 @app.route('/js/<path:path>')
 @app.route('/css/<path:path>')
 @app.route('/html/<path:path>')
@@ -244,18 +266,7 @@ def set_switch(switch_type, my_switch):
 @app.route('/push/<string:switch_type>/<string:my_switch>/<string:my_pin>', methods=['PUT'])
 @requires_auth
 def push_switch(switch_type, my_switch, my_pin):
-    configuration = BlackhouseConfiguration()
-    if not configuration.get_devices(switch_type):
-        return jsonify(False)
-    service = configuration.get_device_info(my_switch, switch_type)
-    if service:
-        if switch_type == "gpio_push":
-            temp_switch = GPIOSwitch(service)
-            return jsonify(temp_switch.push(my_pin))
-        else:
-            return jsonify("Missing valid device")
-    logging.debug("Service not Found: {}".format(service))
-    return jsonify(service)
+    return jsonify(request_push_to_device(my_switch, switch_type, my_pin))
 
 
 @app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['GET'])
