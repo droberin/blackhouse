@@ -15,6 +15,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 from blackhouse.flat_configuration import BlackhouseConfiguration
 from blackhouse.switch.gpioswitch import GPIOSwitch
+from blackhouse.api import request_push_to_device
 
 debug = True
 
@@ -29,6 +30,11 @@ my_token = os.getenv('TELEGRAM_TOKEN', None)
 if os.path.isfile("/.dockerenv"):
     config_dir = os.getenv('TELEGRAM_CONFIG_DIR', "/app/etc")
     running_in_docker = True
+    # Take a look at token secrets, just in case of luck!
+    if os.path.isfile('/run/secrets/telegram_token'):
+        logging.info("Found telegram token through Docker secrets")
+        with open('/run/secrets/telegram_token', 'r') as my_token_fp:
+            my_token = my_token_fp.read(50).rstrip(os.linesep)
 else:
     config_dir = os.getenv('TELEGRAM_CONFIG_DIR', ".")
     running_in_docker = False
@@ -232,22 +238,23 @@ def echo(bot, update):
         else:
             bot.sendMessage(chat_id=chat_id, text="Hola, persona desconocida que se hace llamar «{}»".format(user_name))
 
-    elif message.lower().startswith("gate") or\
-            message.lower().startswith("puerta"):
+    elif message.lower().startswith("push"):
         if chat_id in valid_uids:
-            configuration = BlackhouseConfiguration()
-            if not configuration.get_devices('gpio_push'):
-                bot.sendMessage(chat_id=chat_id, text="Coudn't find any GPIO_push device")
-                return False
-            service = configuration.get_device_info('gate', 'gpio_push')
-            if service:
-                temp_switch = GPIOSwitch(service)
-                logging.info("[{}] Requested Gate push".format(user_name))
-                bot.sendMessage(chat_id=chat_id, text=temp_switch.push(18))
+            params = message.split(' '),
+            params = params[0]
+            if len(params) > 1:
+                device_name = params[1]
+                if len(params) > 2:
+                    device_pin = int(params[2])
+                else:
+                    device_pin = 18
+                result = request_push_to_device(device_name, 'gpio_push', device_pin)
+                logging.info("[{}] Requested Gate push: {} {}".format(user_name, device_name, device_pin))
+                bot.sendMessage(chat_id=chat_id, text="[PUSH] '{}' ({}): {}".format(device_name, device_pin, result))
             else:
-                bot.sendMessage(chat_id=chat_id, text="No 'gpio_push' device named 'gate' found. (PIN 18)")
+                bot.sendMessage(chat_id=chat_id, text="Device name required (pin number defaults 18).")
         else:
-            bot.sendMessage(chat_id=chat_id, text="Ya te molaba.\nHabla con el superintendente para que te dé acceso\n"
+            bot.sendMessage(chat_id=chat_id, text="No, can't do\n"
                                                   "Tu ID es: {}".format(chat_id))
     elif message.lower().startswith("time"):
         showtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())

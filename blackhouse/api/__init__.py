@@ -24,8 +24,7 @@ blackhouse_switches_config =\
     + blackhouse_config_instance.config_structure['blackhouse_configuration_devices']
 
 blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
-if blackhouse_service_type == 'push':
-    from blackhouse.switch.gpioswitch import GPIOSwitch
+from blackhouse.switch.gpioswitch import GPIOSwitch
 
 
 def check_auth(username, password):
@@ -138,7 +137,7 @@ def provide_valid_file_or_fail(file):
 
 
 def dockerised():
-    return True if os.path.isfile('/.docker') else False
+    return True if os.path.isfile('/.dockerenv') else False
 
 # Alias for USA
 dockerized = dockerised
@@ -165,6 +164,28 @@ def template(template_name):
     else:
         logging.debug('Template {} not found'.format(template_name))
         return jsonify("Sorry, can't find that template")
+
+
+def request_push_to_device(my_switch, switch_type, my_pin):
+    """
+    Push only, can be used from CLI.
+    :param my_switch: switch name defined in devices configuration
+    :param switch_type: gpio_push
+    :param my_pin: pin int.
+    :return: result of execution or False
+    """
+    configuration = BlackhouseConfiguration()
+    if not configuration.get_devices(switch_type):
+        return False
+    service = configuration.get_device_info(my_switch, switch_type)
+    if service:
+        if switch_type == "gpio_push":
+            temp_switch = GPIOSwitch(service)
+            return temp_switch.push(my_pin)
+        else:
+            return "Missing valid device"
+    logging.debug("Service not Found: {}".format(service))
+    return service
 
 
 @app.route('/js/<path:path>')
@@ -244,17 +265,7 @@ def set_switch(switch_type, my_switch):
 @app.route('/push/<string:switch_type>/<string:my_switch>/<string:my_pin>', methods=['PUT'])
 @requires_auth
 def push_switch(switch_type, my_switch, my_pin):
-    configuration = BlackhouseConfiguration()
-    if not configuration.get_devices(switch_type):
-        return jsonify(False)
-    service = configuration.get_device_info(my_switch)
-    if service:
-        if switch_type == "gpio_push":
-            temp_switch = GPIOSwitch(service)
-            return jsonify(temp_switch.push(my_pin))
-        else:
-            return jsonify("Missing valid device")
-    return jsonify(service)
+    return jsonify(request_push_to_device(my_switch, switch_type, my_pin))
 
 
 @app.route('/switch/<string:switch_type>/<string:my_switch>', methods=['GET'])
