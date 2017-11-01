@@ -24,8 +24,7 @@ blackhouse_switches_config =\
     + blackhouse_config_instance.config_structure['blackhouse_configuration_devices']
 
 blackhouse_service_type = getenv('BH_SERVICE_TYPE', 'controller')
-if blackhouse_service_type == 'push':
-    from blackhouse.switch.gpioswitch import GPIOSwitch
+from blackhouse.switch.gpioswitch import GPIOSwitch
 
 
 def check_auth(username, password):
